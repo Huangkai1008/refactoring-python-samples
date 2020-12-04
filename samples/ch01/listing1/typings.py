@@ -5,7 +5,7 @@ Genre = Literal['tragedy', 'comedy']
 PlayID = Literal['hamlet', 'as-like', 'othello']
 
 
-@dataclass
+@dataclass(frozen=True)
 class Play:
     name: str
     type: Genre
@@ -14,13 +14,13 @@ class Play:
 Plays = Dict[PlayID, Play]
 
 
-@dataclass
+@dataclass(frozen=True)
 class Performance:
     play_id: PlayID
     audience: int
 
 
-@dataclass
+@dataclass(frozen=True)
 class Invoice:
     customer: str
     performances: List[Performance]

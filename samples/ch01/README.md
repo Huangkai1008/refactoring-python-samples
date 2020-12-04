@@ -10,3 +10,5 @@
 6. Extracting the volume credits
 7. Removing the `format` variable
 8. Removing total volume credits
+9. Splitting the phases of calculation and formatting
+10. Status: separated into two files (and phases)

@@ -1,58 +1,49 @@
-import math
-
 from samples.ch01.listing1.helper import get_invoices, get_plays
-from samples.ch01.listing1.typings import Invoice, Plays, Performance, Play
+from samples.ch01.listing1.statement_arg import StatementArg, create_statement_arg
+from samples.ch01.listing1.typings import Invoice, Plays
 
 
 def statement(invoice: Invoice, plays: Plays) -> str:
-    return render_plain_text(invoice, plays)
+    return render_plain_text(create_statement_arg(invoice, plays))
 
 
-def render_plain_text(invoice: Invoice, plays: Plays) -> str:
-    def play_for(perf: Performance) -> Play:
-        play = plays[perf.play_id]
-        return play
+def render_plain_text(statement_args: StatementArg) -> str:
+    result = f'Statement for {statement_args["customer"]}\n'
+    for perf in statement_args['performances']:
+        result += (
+            f' {perf.play.name}: {usd_format(perf.amount)} '
+            f'({perf.audience} seats)\n'
+        )
 
-    def amount_for(perf: Performance) -> int:
-        if play_for(perf).type == 'tragedy':
-            amount = 40000
-            if perf.audience > 30:
-                amount += 1000 * (perf.audience - 30)
-        elif play_for(perf).type == 'comedy':
-            amount = 30000
-            if perf.audience > 20:
-                amount += 10000 + 500 * (perf.audience - 20)
-            amount += 300 * perf.audience
-        else:
-            raise ValueError(f'Unknown type: ${play_for(perf).type}')
-        return amount
+    result += f'Amount owed is {statement_args["total_amount"]} \n'
+    result += f'You earned {statement_args["total_volume_credits"]} credits\n'
 
-    def volume_credits_for(perf: Performance) -> int:
-        volume_credits = 0
-        volume_credits += max(perf.audience - 30, 0)
-        if play_for(perf).type == 'comedy':
-            volume_credits += math.floor(perf.audience / 5)
-        return volume_credits
+    return result
 
-    def total_amount() -> int:
-        total_amount = 0
-        for perf in invoice.performances:
-            total_amount += amount_for(perf)
-        return total_amount
 
-    def total_volume_credits() -> int:
-        volume_credits = 0
-        for perf in invoice.performances:
-            volume_credits += volume_credits_for(perf)
-        return volume_credits
+def html_statement(invoice: Invoice, plays: Plays) -> str:
+    return render_html(create_statement_arg(invoice, plays))
 
-    result = f'Statement for {invoice.customer}\n'
-    for perf in invoice.performances:
-        result += f' {play_for(perf).name}: {usd_format(amount_for(perf) / 100)} ({perf.audience} seats)\n'
 
-    result += f'Amount owed is {usd_format(total_amount() / 100)} \n'
-    result += f'You earned {total_volume_credits()} credits\n'
+def render_html(statement_args: StatementArg) -> str:
+    result = f"<h1>Invoice (Customer: {statement_args['customer']})</h1>\n"
+    result += "<table>\n"
+    result += "<tr><th>Play</th><th>Seats</th><th>Price</th></tr>\n"
 
+    for perf in statement_args["performances"]:
+        result += (
+            f"\t<tr><td>{perf.play.name}</td>"
+            f"<td>({perf.audience} Seats)</td>"
+            f"<td>{usd_format(perf.amount)}</td></tr>\n"
+        )
+
+    result += "</table>\n"
+    result += (
+        f"<p>Total Amount: <em>{usd_format(statement_args['total_amount'])}</em></p>\n"
+    )
+    result += (
+        f"<p>Volume Credits: <em>{statement_args['total_volume_credits']}</em></p>\n"
+    )
     return result
 
 
@@ -64,3 +55,4 @@ if __name__ == '__main__':
     param1 = get_invoices()[0]
     param2 = get_plays()
     print(statement(param1, param2))
+    print(html_statement(param1, param2))
