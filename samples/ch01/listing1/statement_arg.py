@@ -3,6 +3,7 @@ from dataclasses import asdict, dataclass
 from functools import reduce
 from typing import List, TypedDict
 
+from samples.ch01.listing1.performance_calculator import create_performance_calculator
 from samples.ch01.listing1.typings import Invoice, Performance, Play, Plays
 
 
@@ -32,10 +33,11 @@ def create_statement_arg(invoice: Invoice, plays: Plays) -> StatementArg:
 
 
 def _enrich_performance(plays: Plays, perf: Performance) -> EnrichedPerformance:
+    calculator = create_performance_calculator(perf, _get_play_for(plays, perf))
     return EnrichedPerformance(
         play=_get_play_for(plays, perf),
-        amount=_get_amount_for(plays, perf),
-        volume_credits=_get_volume_credits_for(plays, perf),
+        amount=calculator.get_amount(),
+        volume_credits=calculator.get_volume_credits(),
         **asdict(perf),
     )
 
@@ -43,21 +45,6 @@ def _enrich_performance(plays: Plays, perf: Performance) -> EnrichedPerformance:
 def _get_play_for(plays: Plays, perf: Performance) -> Play:
     play = plays[perf.play_id]
     return play
-
-
-def _get_amount_for(plays: Plays, perf: Performance) -> int:
-    if _get_play_for(plays, perf).type == 'tragedy':
-        amount = 40000
-        if perf.audience > 30:
-            amount += 1000 * (perf.audience - 30)
-    elif _get_play_for(plays, perf).type == 'comedy':
-        amount = 30000
-        if perf.audience > 20:
-            amount += 10000 + 500 * (perf.audience - 20)
-        amount += 300 * perf.audience
-    else:
-        raise ValueError(f'Unknown type: ${_get_play_for(plays, perf).type}')
-    return amount
 
 
 def _get_volume_credits_for(plays: Plays, perf: Performance) -> int:

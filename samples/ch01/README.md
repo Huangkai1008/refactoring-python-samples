@@ -12,3 +12,5 @@
 8. Removing total volume credits
 9. Splitting the phases of calculation and formatting
 10. Status: separated into two files (and phases)
+11. Reorganizing the calculations by type
+12. Make the performance calculator polymorphic
